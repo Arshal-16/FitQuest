@@ -1,0 +1,118 @@
+[
+  {
+    "_id": "6a1e4a79a15758d0b8fe6415",
+    "name": "Arshal",
+    "email": "admin@fitquest.com",
+    "photo": "user-6a1e4a79a15758d0b8fe6415-1780889695044.jpeg",
+    "role": "admin",
+    "active": true
+  },
+  {
+    "_id": "6a1e623bcdb4882d47e1e091",
+    "name": "Rohan Mehta",
+    "email": "rohan@fitquest.com",
+    "photo": "user-6a1e623bcdb4882d47e1e091-1780891248740.jpeg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a1e6248cdb4882d47e1e092",
+    "name": "Priya Sharma",
+    "email": "priya@fitquest.com",
+    "photo": "user-6a1e6248cdb4882d47e1e092-1780891293539.jpeg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a1e6259cdb4882d47e1e093",
+    "name": "Arjun Kapoor",
+    "email": "arjun@fitquest.com",
+    "photo": "user-6a1e6259cdb4882d47e1e093-1780891340173.jpeg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a1e6267cdb4882d47e1e094",
+    "name": "Sneha Patil",
+    "email": "sneha@gmail.com",
+    "photo": "user-4.jpg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a1e6276cdb4882d47e1e095",
+    "name": "Ananya Joshi",
+    "email": "ananya@gmail.com",
+    "photo": "user-5.jpg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a1e6282cdb4882d47e1e096",
+    "name": "Vikram Nair",
+    "email": "vikram@gmail.com",
+    "photo": "user-6.jpg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a1e6291cdb4882d47e1e097",
+    "name": "Meera Reddy",
+    "email": "meera@gmail.com",
+    "photo": "user-7.jpg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a1e6298cdb4882d47e1e098",
+    "name": "Kabir Singh",
+    "email": "kabir@gmail.com",
+    "photo": "user-8.jpg",
+    "role": "user",
+    "active": true
+  },
+  {
+    "_id": "6a20401582bdd49ea9902ab1",
+    "name": "Rahul Verma",
+    "email": "rahul@fitquest.com",
+    "photo": "user-6a20401582bdd49ea9902ab1-1780890373507.jpeg",
+    "role": "trainer",
+    "active": true,
+    "description": "Rahul Verma is a certified strength and conditioning coach with extensive experience helping clients build muscle, increase overall strength, and improve lifting technique. He designs structured training plans focused on progressive overload, performance tracking, and long-term fitness success.",
+    "experience": 8,
+    "specialization": "strength"
+  },
+  {
+    "_id": "6a20402982bdd49ea9902ab2",
+    "name": "Neha Gupta",
+    "email": "neha@fitquest.com",
+    "photo": "user-6a20402982bdd49ea9902ab2-1780890479629.jpeg",
+    "role": "trainer",
+    "active": true,
+    "description": "Neha Gupta specializes in sustainable fat loss and lifestyle transformation. She works closely with clients to create personalized workout and nutrition strategies that promote healthy weight management, improved confidence, and long-term wellness.",
+    "experience": 6,
+    "specialization": "weight-loss"
+  },
+  {
+    "_id": "6a20403e82bdd49ea9902ab3",
+    "name": "Aditya Malhotra",
+    "email": "aditya@fitquest.com",
+    "photo": "user-6a20403e82bdd49ea9902ab3-1780890578752.jpeg",
+    "role": "trainer",
+    "active": true,
+    "description": "Aditya Malhotra is an athletic performance trainer who helps individuals enhance speed, agility, endurance, and overall sports performance. His programs combine functional strength training, mobility work, and sport-specific conditioning.",
+    "experience": 10,
+    "specialization": "athletic"
+  },
+  {
+    "_id": "6a20404b82bdd49ea9902ab4",
+    "name": "Ishita Roy",
+    "email": "ishita@fitquest.com",
+    "photo": "user-6a20404b82bdd49ea9902ab4-1780890617870.jpeg",
+    "role": "trainer",
+    "active": true,
+    "description": "Ishita Roy focuses on flexibility, mobility, and movement quality. She helps clients improve posture, reduce stiffness, and increase range of motion through targeted stretching routines, mobility drills, and recovery-focused training methods.",
+    "experience": 5,
+    "specialization": "flexibility"
+  }
+]

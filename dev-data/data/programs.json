@@ -1,0 +1,190 @@
+[
+  {
+    "_id": "6a1e5a6e986aa8cb91b458a9",
+    "name": "12-Week Fat Loss Challenge",
+    "slug": "12-week-fat-loss-challenge",
+    "duration": 12,
+    "sessionsPerWeek": 4,
+    "maxGroupSize": 15,
+    "difficulty": "intermediate",
+    "category": "weight-loss",
+    "format": "in-person",
+    "equipment": "full-gym",
+    "ratingsAverage": 4.8,
+    "ratingsQuantity": 24,
+    "price": 799,
+    "priceDiscount": 649,
+    "summary": "Torch fat and build lean muscle with our science-backed 12-week transformation program",
+    "description": "This program is specifically engineered for individuals who have tried everything and are ready for a structured, results-driven approach to fat loss. Combining progressive overload strength training with strategic cardio sessions, you will build a metabolic engine that burns fat around the clock — not just during workouts.\n\nEvery week of this program is intentionally designed. The first four weeks focus on building your aerobic base and establishing movement patterns. Weeks five through eight progressively increase intensity and introduce compound lifts. The final block peaks your training load before a planned deload to maximize fat loss results. Nutrition guidance, weekly check-ins, and trainer support are included throughout.",
+    "imageCover": "program-6a1e5a6e986aa8cb91b458a9-1780851087354-cover.jpeg",
+    "images": [
+      "program-6a1e5a6e986aa8cb91b458a9-1780851087467-3.jpeg",
+      "program-6a1e5a6e986aa8cb91b458a9-1780851087466-1.jpeg",
+      "program-6a1e5a6e986aa8cb91b458a9-1780851087466-2.jpeg"
+    ],
+    "startDates": [
+      "2026-04-01T08:00:00.000Z",
+      "2026-07-01T08:00:00.000Z",
+      "2026-10-01T08:00:00.000Z"
+    ],
+    "secretProgram": false,
+    "trainers": ["6a20401582bdd49ea9902ab1", "6a20402982bdd49ea9902ab2"],
+    "durationMonths": 3
+  },
+  {
+    "_id": "6a1e5a86986aa8cb91b458ac",
+    "name": "Strength Builder Pro 8 Week",
+    "slug": "strength-builder-pro-8-week",
+    "duration": 8,
+    "sessionsPerWeek": 5,
+    "maxGroupSize": 10,
+    "difficulty": "advanced",
+    "category": "strength",
+    "format": "in-person",
+    "equipment": "full-gym",
+    "ratingsAverage": 4.9,
+    "ratingsQuantity": 18,
+    "price": 999,
+    "summary": "Push your absolute limits with an elite 8-week powerlifting and hypertrophy program",
+    "description": "Strength Builder Pro is not for the faint-hearted. Designed for experienced lifters who have plateaued and need a structured, periodized push to the next level, this program runs on a 5-day upper-lower split with dedicated accessory work built into every session.\n\nYou will train squat, bench, and deadlift twice per week using a combination of linear and undulating periodization. Hypertrophy blocks are embedded within strength days to maximize both size and raw power. Your lead trainer will conduct movement assessments in week one, adjust programming in real time based on your performance, and be present at every session for coaching cues and accountability.",
+    "imageCover": "program-6a1e5a86986aa8cb91b458ac-1780889426709-cover.jpeg",
+    "images": [
+      "program-6a1e5a86986aa8cb91b458ac-1780889426820-1.jpeg",
+      "program-6a1e5a86986aa8cb91b458ac-1780889426821-3.jpeg",
+      "program-6a1e5a86986aa8cb91b458ac-1780889426821-2.jpeg"
+    ],
+    "startDates": [
+      "2026-03-04T08:00:00.000Z",
+      "2026-06-03T08:00:00.000Z",
+      "2026-09-02T08:00:00.000Z"
+    ],
+    "secretProgram": false,
+    "trainers": ["6a20401582bdd49ea9902ab1", "6a20404b82bdd49ea9902ab4"],
+    "durationMonths": 2
+  },
+  {
+    "_id": "6a1e5a9b986aa8cb91b458ae",
+    "name": "Beginner Body Recomp Six Weeks",
+    "slug": "beginner-body-recomp-six-weeks",
+    "duration": 6,
+    "sessionsPerWeek": 3,
+    "maxGroupSize": 20,
+    "difficulty": "beginner",
+    "category": "weight-loss",
+    "format": "hybrid",
+    "equipment": "minimal",
+    "ratingsAverage": 4.7,
+    "ratingsQuantity": 31,
+    "price": 499,
+    "priceDiscount": 399,
+    "summary": "Your first step into fitness — a beginner-friendly program that builds habits, burns fat, and builds real confidence",
+    "description": "Most beginners fail not because of lack of effort, but because they start with a program that was never designed for them. Beginner Body Recomp fixes that. This 6-week program is built around three in-person sessions per week with two optional online follow-along sessions for active recovery and mobility.\n\nEvery workout is fully coached, every movement is explained from the ground up, and the program scales to your current fitness level. By week six you will have built a consistent training habit, lost measurable body fat, improved your mobility, and most importantly — learned how to train correctly so you never have to start from zero again.",
+    "imageCover": "program-6a1e5a9b986aa8cb91b458ae-1780852116059-cover.jpeg",
+    "images": [
+      "program-6a1e5a9b986aa8cb91b458ae-1780852116175-1.jpeg",
+      "program-6a1e5a9b986aa8cb91b458ae-1780852116176-3.jpeg",
+      "program-6a1e5a9b986aa8cb91b458ae-1780852116176-2.jpeg"
+    ],
+    "startDates": [
+      "2026-02-05T08:00:00.000Z",
+      "2026-05-06T08:00:00.000Z",
+      "2026-08-05T08:00:00.000Z"
+    ],
+    "secretProgram": false,
+    "trainers": ["6a20402982bdd49ea9902ab2", "6a20403e82bdd49ea9902ab3"],
+    "durationMonths": 1.5
+  },
+  {
+    "_id": "6a1e5aaa986aa8cb91b458b1",
+    "name": "Athletic Performance Ten Weeks",
+    "slug": "athletic-performance-ten-weeks",
+    "duration": 10,
+    "sessionsPerWeek": 5,
+    "maxGroupSize": 12,
+    "difficulty": "advanced",
+    "category": "athletic",
+    "format": "in-person",
+    "equipment": "full-gym",
+    "ratingsAverage": 4.9,
+    "ratingsQuantity": 14,
+    "price": 1199,
+    "summary": "Train like a professional athlete — explosive power, speed, agility, and sport-specific conditioning in 10 weeks",
+    "description": "Built for competitive athletes, serious weekend warriors, and anyone who wants to move like a professional, this 10-week program trains the full athletic spectrum. Speed, power, agility, conditioning, and injury prevention are all integrated into a cohesive system that builds on itself week by week.\n\nThe program runs on a 5-day split combining sprint mechanics, Olympic lifting variations, plyometrics, and energy system work. Heart rate monitoring is used throughout to ensure training happens in the right zone for the right adaptation. This is not a gym aesthetic program — this is performance training, and the results will show in how you move, compete, and recover.",
+    "imageCover": "program-6a1e5aaa986aa8cb91b458b1-1780852848008-cover.jpeg",
+    "images": [
+      "program-6a1e5aaa986aa8cb91b458b1-1780852848121-3.jpeg",
+      "program-6a1e5aaa986aa8cb91b458b1-1780852848121-2.jpeg",
+      "program-6a1e5aaa986aa8cb91b458b1-1780852848120-1.jpeg"
+    ],
+    "startDates": [
+      "2026-03-11T08:00:00.000Z",
+      "2026-06-10T08:00:00.000Z",
+      "2026-09-09T08:00:00.000Z"
+    ],
+    "secretProgram": false,
+    "trainers": ["6a20403e82bdd49ea9902ab3", "6a20404b82bdd49ea9902ab4"],
+    "durationMonths": 2.5
+  },
+  {
+    "_id": "6a1e5abd986aa8cb91b458b4",
+    "name": "Yoga and Mobility Mastery Four Weeks",
+    "slug": "yoga-and-mobility-mastery-four-weeks",
+    "duration": 4,
+    "sessionsPerWeek": 4,
+    "maxGroupSize": 25,
+    "difficulty": "beginner",
+    "category": "flexibility",
+    "format": "online",
+    "equipment": "none",
+    "ratingsAverage": 4.6,
+    "ratingsQuantity": 42,
+    "price": 299,
+    "summary": "Unlock your body — a 4-week deep dive into yoga flows, mobility drills, and recovery techniques you will use forever",
+    "description": "Tight hips, stiff shoulders, lower back pain — these are not signs of aging, they are signs of a body that needs deliberate mobility work. Yoga and Mobility Mastery is a fully online, 4-week program delivered through live sessions and recorded follow-alongs that you can do anywhere, anytime, with nothing but a mat.\n\nEach week targets a different area of the body — hips and hamstrings, thoracic spine and shoulders, ankles and lower body, and a full-body integration week to tie everything together. Sessions range from 30 to 60 minutes and are suitable for complete beginners. By the end of week four you will move with noticeably more freedom, recover faster between workouts, and have a sustainable mobility practice you can maintain independently.",
+    "imageCover": "program-6a1e5abd986aa8cb91b458b4-1780853999770-cover.jpeg",
+    "images": [
+      "program-6a1e5abd986aa8cb91b458b4-1780853999870-3.jpeg",
+      "program-6a1e5abd986aa8cb91b458b4-1780853999870-2.jpeg",
+      "program-6a1e5abd986aa8cb91b458b4-1780853999869-1.jpeg"
+    ],
+    "startDates": [
+      "2026-02-12T08:00:00.000Z",
+      "2026-05-13T08:00:00.000Z",
+      "2026-08-12T08:00:00.000Z"
+    ],
+    "secretProgram": false,
+    "trainers": ["6a20404b82bdd49ea9902ab4", "6a20402982bdd49ea9902ab2"],
+    "durationMonths": 1
+  },
+  {
+    "_id": "6a1e5ad4986aa8cb91b458b6",
+    "name": "Hybrid Athlete Sixteen Week Program",
+    "slug": "hybrid-athlete-sixteen-week-program",
+    "duration": 16,
+    "sessionsPerWeek": 6,
+    "maxGroupSize": 8,
+    "difficulty": "intermediate",
+    "category": "athletic",
+    "format": "hybrid",
+    "equipment": "full-gym",
+    "ratingsAverage": 4.8,
+    "ratingsQuantity": 9,
+    "price": 1499,
+    "summary": "The ultimate 16-week program for those who want to be strong, fast, and conditioned all at once",
+    "description": "The hybrid athlete trains for everything — strength, endurance, speed, and resilience. This 16-week flagship program is FitQuest's most comprehensive offering, combining barbell strength work with running, rowing, and conditioning blocks in a periodized structure that prevents overtraining while driving continuous adaptation.\n\nWeeks one through four establish your aerobic and strength baseline. Weeks five through eight build concurrent capacity. Weeks nine through twelve peak your strength and threshold pace simultaneously. The final four weeks integrate everything into race and competition prep, finishing with a test week where you will measure exactly how far you have come. Three in-person sessions per week are complemented by three online sessions, giving you maximum flexibility without sacrificing coaching quality.",
+    "imageCover": "program-6a1e5ad4986aa8cb91b458b6-1780853507628-cover.jpeg",
+    "images": [
+      "program-6a1e5ad4986aa8cb91b458b6-1780853507740-2.jpeg",
+      "program-6a1e5ad4986aa8cb91b458b6-1780853507740-3.jpeg",
+      "program-6a1e5ad4986aa8cb91b458b6-1780853507739-1.jpeg"
+    ],
+    "startDates": [
+      "2026-01-08T08:00:00.000Z",
+      "2026-04-08T08:00:00.000Z",
+      "2026-07-08T08:00:00.000Z"
+    ],
+    "secretProgram": false,
+    "trainers": ["6a20401582bdd49ea9902ab1", "6a20403e82bdd49ea9902ab3"],
+    "durationMonths": 4
+  }
+]
