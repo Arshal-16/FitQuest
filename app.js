@@ -13,6 +13,8 @@ const hpp = require('hpp');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
 const AppError = require('./utils/appError');
 const globalErrorHandler = require('./controllers/errorController');
 
@@ -21,6 +23,8 @@ const userRouter = require('./routes/userRoutes');
 const reviewRouter = require('./routes/reviewRoutes');
 const bookingRouter = require('./routes/bookingRoutes');
 const bookingController = require('./controllers/bookingController');
+
+const swaggerDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
 
 /*
 |--------------------------------------------------------------------------
@@ -150,6 +154,9 @@ app.use(
 // ROUTE MOUNTING
 // ==============================
 // Mount routers for specific API resources at their base paths
+
+// API Documentation: /api-docs
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // Programs API: /api/v1/programs
 app.use('/api/v1/programs', programRouter);

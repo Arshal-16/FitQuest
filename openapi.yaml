@@ -1,0 +1,1753 @@
+openapi: 3.0.3
+info:
+  title: FitQuest API
+  description: >
+    FitQuest is a full-stack fitness program booking platform built with Node.js, Express, MongoDB, and Stripe.
+    This API supports user authentication, program discovery, reviews, and Stripe checkouts.
+  version: 1.0.0
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://fitquest.onrender.com
+    description: Render production server
+paths:
+  # ==========================================
+  # WEBHOOK ENDPOINT (ROOT LEVEL)
+  # ==========================================
+  /webhook-checkout:
+    post:
+      summary: Stripe Webhook for Checkout Session Completion
+      description: >
+        Stripe webhook endpoint called when a checkout session completes.
+        Converts successful checkout events into local Booking documents.
+        Requires Stripe signature verification from header.
+      tags:
+        - Bookings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Webhook received successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  received:
+                    type: boolean
+                    example: true
+        '400':
+          description: Invalid stripe signature or payload verification failure
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "Webhook error: Signature verification failed"
+
+  # ==========================================
+  # AUTHENTICATION & USERS
+  # ==========================================
+  /api/v1/users/signup:
+    post:
+      summary: Register a new user
+      description: Registers a new user account (role defaults to 'user'). Handles profile photo upload via form-data.
+      tags:
+        - Authentication
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+                - passwordConfirm
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                  maxLength: 40
+                  example: Jane Doe
+                email:
+                  type: string
+                  format: email
+                  example: jane.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: supersecret123
+                passwordConfirm:
+                  type: string
+                  format: password
+                  example: supersecret123
+                photo:
+                  type: string
+                  format: binary
+                  description: Optional profile picture image file.
+      responses:
+        '201':
+          description: User registered successfully and JWT cookie set.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: jwt=token123; Path=/; HttpOnly; Secure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Validation error or passwords do not match.
+
+  /api/v1/users/login:
+    post:
+      summary: Authenticate user & get token
+      description: Logs in a user using email and password, setting the JWT cookie.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: jane.doe@example.com
+                password:
+                  type: string
+                  format: password
+                  example: supersecret123
+      responses:
+        '200':
+          description: Login successful.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: jwt=token123; Path=/; HttpOnly; Secure
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Missing email or password.
+        '401':
+          description: Incorrect email or password.
+
+  /api/v1/users/logout:
+    get:
+      summary: Log user out
+      description: Clears the JWT session cookie by setting a short-lived placeholder.
+      tags:
+        - Authentication
+      responses:
+        '200':
+          description: Logout successful.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: jwt=loggedOut; Path=/; Expires=...
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+
+  /api/v1/users/forgotPassword:
+    post:
+      summary: Request password reset token
+      description: Sends a password reset token to the user's registered email address.
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: jane.doe@example.com
+      responses:
+        '200':
+          description: Reset token sent to email.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  message:
+                    type: string
+                    example: Token sent to email
+        '404':
+          description: No user exists with that email.
+
+  /api/v1/users/resetPassword/{token}:
+    patch:
+      summary: Reset password with token
+      description: Resets password using the token sent via email. Logs user in upon completion.
+      tags:
+        - Authentication
+      parameters:
+        - name: token
+          in: path
+          required: true
+          description: The unhashed reset token sent to user email.
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - password
+                - passwordConfirm
+              properties:
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: newsecurepassword123
+                passwordConfirm:
+                  type: string
+                  format: password
+                  example: newsecurepassword123
+      responses:
+        '200':
+          description: Password updated successfully and user logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid token, token expired, or validation failure.
+
+  /api/v1/users/updateMyPassword:
+    patch:
+      summary: Update password (authenticated)
+      description: Updates the password of the currently logged-in user.
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - passwordCurrent
+                - password
+                - passwordConfirm
+              properties:
+                passwordCurrent:
+                  type: string
+                  format: password
+                  example: supersecret123
+                password:
+                  type: string
+                  format: password
+                  minLength: 8
+                  example: updatedpass123
+                passwordConfirm:
+                  type: string
+                  format: password
+                  example: updatedpass123
+      responses:
+        '200':
+          description: Password updated successfully. New token issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Incorrect current password or unauthorized.
+
+  /api/v1/users/me:
+    get:
+      summary: Get currently authenticated user profile
+      description: Retrieves details of the logged-in user.
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: User profile retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized.
+
+  /api/v1/users/my-bookings:
+    get:
+      summary: Get current user's bookings
+      description: Returns all bookings/purchases associated with the authenticated user.
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Array of bookings successfully fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+        '401':
+          description: Unauthorized.
+
+  /api/v1/users/updateMe:
+    patch:
+      summary: Update current user's profile
+      description: Updates non-sensitive user profile details (name, email, profile photo).
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 3
+                  maxLength: 40
+                  example: Jane Doe Edited
+                email:
+                  type: string
+                  format: email
+                  example: jane.edited@example.com
+                photo:
+                  type: string
+                  format: binary
+                  description: Optional profile picture image file upload.
+      responses:
+        '200':
+          description: Profile updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '400':
+          description: Cannot use this route for password updates or invalid inputs.
+        '401':
+          description: Unauthorized.
+
+  /api/v1/users/deleteMe:
+    delete:
+      summary: Deactivate current user account
+      description: Soft deletes the user account by setting the `active` state to false.
+      tags:
+        - Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '204':
+          description: Account deactivated successfully. No content.
+        '401':
+          description: Unauthorized.
+
+  /api/v1/users/trainers:
+    get:
+      summary: List all trainers
+      description: Publicly lists all users in the system who have the role of `trainer`.
+      tags:
+        - Users
+      responses:
+        '200':
+          description: Trainers listed successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+
+  /api/v1/users:
+    get:
+      summary: List all users (Admin only)
+      description: Admin-level query to get all registered users. Supports pagination, filtering, sorting, field limiting.
+      tags:
+        - Administrative Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Users listed successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                    example: 10
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/User'
+        '403':
+          description: Forbidden. Requester is not an administrator.
+        '401':
+          description: Unauthorized.
+
+    post:
+      summary: Create a user placeholder (Admin only)
+      description: Admin-level placeholder. Note that signup route `/signup` is preferred.
+      tags:
+        - Administrative Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '500':
+          description: Endpoint placeholder returned error. Use /signup instead.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: error
+                  message:
+                    type: string
+                    example: This route is not defined! Please use /signup instead
+
+  /api/v1/users/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The ID of the target user.
+        schema:
+          type: string
+    get:
+      summary: Get user details (Admin only)
+      description: Retrieves detailed attributes for a specific user ID.
+      tags:
+        - Administrative Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: User retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+        '404':
+          description: User not found.
+    patch:
+      summary: Update user attributes (Admin only)
+      description: Direct write updates to any user fields (including roles, specialization, etc.).
+      tags:
+        - Administrative Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                role:
+                  type: string
+                  enum: [user, trainer, admin]
+                name:
+                  type: string
+                email:
+                  type: string
+                description:
+                  type: string
+                  maxLength: 500
+                specialization:
+                  type: string
+                  enum: [strength, weight-loss, cardio, flexibility, athletic, rehabilitation]
+                experience:
+                  type: integer
+                  minimum: 0
+                  maximum: 50
+      responses:
+        '200':
+          description: User updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+    delete:
+      summary: Delete user permanently (Admin only)
+      description: Permanently removes a user record from the system and deletes its Cloudinary photo asset.
+      tags:
+        - Administrative Users
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '204':
+          description: User deleted successfully. No content returned.
+
+  # ==========================================
+  # PROGRAMS
+  # ==========================================
+  /api/v1/programs:
+    get:
+      summary: Get all programs
+      description: Retrieve all fitness training programs. Supports standard search filtering, sorting, pagination, and field limiting.
+      tags:
+        - Programs
+      parameters:
+        - name: sort
+          in: query
+          description: Sort field string (comma-separated, prefix with - for descending)
+          schema:
+            type: string
+            example: -price,ratingsAverage
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: Limit items per page
+          schema:
+            type: integer
+            default: 100
+        - name: fields
+          in: query
+          description: Field projection list
+          schema:
+            type: string
+            example: name,price,ratingsAverage
+        - name: difficulty
+          in: query
+          description: Filter by difficulty level
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+        - name: category
+          in: query
+          description: Filter by program category
+          schema:
+            type: string
+            enum: [weight-loss, strength, cardio, flexibility, athletic, rehabilitation]
+      responses:
+        '200':
+          description: Programs retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                    example: 5
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Program'
+
+    post:
+      summary: Create a new program (Admin/Trainer only)
+      description: Creates a training program, supporting file uploads for the cover image and gallery.
+      tags:
+        - Programs
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - duration
+                - sessionsPerWeek
+                - maxGroupSize
+                - difficulty
+                - category
+                - price
+                - summary
+                - imageCover
+              properties:
+                name:
+                  type: string
+                  minLength: 10
+                  maxLength: 50
+                  example: Summer Strength Booster
+                duration:
+                  type: integer
+                  minimum: 1
+                  description: Duration of program in weeks
+                  example: 8
+                sessionsPerWeek:
+                  type: integer
+                  minimum: 1
+                  maximum: 7
+                  example: 4
+                maxGroupSize:
+                  type: integer
+                  minimum: 1
+                  example: 12
+                difficulty:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                  example: intermediate
+                category:
+                  type: string
+                  enum: [weight-loss, strength, cardio, flexibility, athletic, rehabilitation]
+                  example: strength
+                format:
+                  type: string
+                  enum: [in-person, online, hybrid]
+                  default: in-person
+                equipment:
+                  type: string
+                  enum: [none, minimal, full-gym]
+                  default: full-gym
+                price:
+                  type: number
+                  minimum: 0
+                  example: 199.99
+                priceDiscount:
+                  type: number
+                  description: Must be below regular price
+                  example: 149.99
+                summary:
+                  type: string
+                  example: A high intensity strength training camp.
+                description:
+                  type: string
+                  example: Complete program descriptive text.
+                startDates:
+                  type: array
+                  items:
+                    type: string
+                    format: date
+                  example: ["2026-07-01", "2026-08-01"]
+                imageCover:
+                  type: string
+                  format: binary
+                  description: Mandatory cover image file upload
+                images:
+                  type: array
+                  maxItems: 3
+                  items:
+                    type: string
+                    format: binary
+                  description: Up to 3 gallery image file uploads
+      responses:
+        '201':
+          description: Program created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Program'
+        '403':
+          description: Forbidden (Not a trainer or admin).
+        '400':
+          description: Validation error.
+
+  /api/v1/programs/top-5-cheap:
+    get:
+      summary: Get Top 5 Rated Cheap Programs
+      description: Pre-fills query options to yield top 5 highest-rated cheapest programs.
+      tags:
+        - Programs
+      responses:
+        '200':
+          description: Top programs retrieved successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                    example: 5
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Program'
+
+  /api/v1/programs/program-stats:
+    get:
+      summary: Retrieve programs analytics & stats
+      description: Returns aggregated program statistics grouped by difficulty level and categories.
+      tags:
+        - Programs
+      responses:
+        '200':
+          description: Analytics returned successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      stats:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                              example: INTERMEDIATE
+                            numPrograms:
+                              type: integer
+                              example: 3
+                            numRatings:
+                              type: integer
+                              example: 14
+                            avgRating:
+                              type: number
+                              example: 4.8
+                            avgPrice:
+                              type: number
+                              example: 180.0
+                            minPrice:
+                              type: number
+                              example: 99.99
+                            maxPrice:
+                              type: number
+                              example: 249.99
+                      categoryStats:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            _id:
+                              type: string
+                              example: strength
+                            numPrograms:
+                              type: integer
+                              example: 5
+                            avgPrice:
+                              type: number
+                              example: 165.5
+                            avgRating:
+                              type: number
+                              example: 4.7
+
+  /api/v1/programs/my-programs:
+    get:
+      summary: Get programs assigned to trainer (Trainer only)
+      description: Retrieves all programs created or instructed by the authenticated trainer.
+      tags:
+        - Programs
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Trainer's programs fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                    example: 2
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Program'
+        '403':
+          description: Forbidden (Not a trainer).
+
+  /api/v1/programs/monthly-plan/{year}:
+    get:
+      summary: Get monthly training plan starts (Admin/Trainer only)
+      description: Lists program start event occurrences grouped by month for a given calendar year.
+      tags:
+        - Programs
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: year
+          in: path
+          required: true
+          description: Calendar year filter.
+          schema:
+            type: integer
+            example: 2026
+      responses:
+        '200':
+          description: Calendar plan compiled successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                    example: 12
+                  data:
+                    type: object
+                    properties:
+                      plan:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            numProgramStarts:
+                              type: integer
+                              example: 3
+                            programs:
+                              type: array
+                              items:
+                                type: string
+                              example: ["Summer Booster", "Elite Strength"]
+                            month:
+                              type: integer
+                              example: 7
+
+  /api/v1/programs/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The program identifier key.
+        schema:
+          type: string
+    get:
+      summary: Get program details by ID
+      description: Returns complete details of a single program. Populates reviews virtual array.
+      tags:
+        - Programs
+      responses:
+        '200':
+          description: Program fetched successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        allOf:
+                          - $ref: '#/components/schemas/Program'
+                          - type: object
+                            properties:
+                              reviews:
+                                type: array
+                                items:
+                                  $ref: '#/components/schemas/Review'
+        '404':
+          description: Program not found.
+
+    patch:
+      summary: Update program details (Admin/Trainer only)
+      description: Updates specified program attributes and processes new image asset uploads to Cloudinary.
+      tags:
+        - Programs
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 10
+                  maxLength: 50
+                duration:
+                  type: integer
+                  minimum: 1
+                sessionsPerWeek:
+                  type: integer
+                  minimum: 1
+                  maximum: 7
+                maxGroupSize:
+                  type: integer
+                  minimum: 1
+                difficulty:
+                  type: string
+                  enum: [beginner, intermediate, advanced]
+                category:
+                  type: string
+                  enum: [weight-loss, strength, cardio, flexibility, athletic, rehabilitation]
+                format:
+                  type: string
+                  enum: [in-person, online, hybrid]
+                equipment:
+                  type: string
+                  enum: [none, minimal, full-gym]
+                price:
+                  type: number
+                  minimum: 0
+                priceDiscount:
+                  type: number
+                summary:
+                  type: string
+                description:
+                  type: string
+                startDates:
+                  type: array
+                  items:
+                    type: string
+                    format: date
+                imageCover:
+                  type: string
+                  format: binary
+                  description: Optional replacement cover image
+                images:
+                  type: array
+                  maxItems: 3
+                  items:
+                    type: string
+                    format: binary
+                  description: Optional replacement gallery images
+      responses:
+        '200':
+          description: Program updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Program'
+        '403':
+          description: Forbidden.
+        '404':
+          description: Program not found.
+
+    delete:
+      summary: Delete program permanently (Admin/Trainer only)
+      description: Deletes program metadata and permanently destroys assets hosted on Cloudinary.
+      tags:
+        - Programs
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '204':
+          description: Program deleted successfully. No content returned.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Program not found.
+
+  # ==========================================
+  # REVIEWS
+  # ==========================================
+  /api/v1/reviews:
+    get:
+      summary: Get all reviews
+      description: Returns a list of all program reviews. Supports filtering, sorting, pagination.
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Reviews successfully retrieved.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                    example: 15
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Review'
+
+    post:
+      summary: Create a new review
+      description: Posts a program review. Only standard 'user' role can review (trainers/admins cannot review).
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - review
+                - rating
+                - program
+              properties:
+                review:
+                  type: string
+                  example: This program changed my entire fitness routine! Excellent trainer.
+                rating:
+                  type: number
+                  minimum: 1
+                  maximum: 5
+                  example: 5
+                program:
+                  type: string
+                  description: Mongo DB program reference ID key
+                  example: 60d21b4667d0d8992e610c85
+      responses:
+        '201':
+          description: Review created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Review'
+        '403':
+          description: Forbidden. Guides/admins/trainers cannot review.
+        '400':
+          description: Validation error or duplicate review by user for program.
+
+  /api/v1/programs/{programId}/reviews:
+    parameters:
+      - name: programId
+        in: path
+        required: true
+        description: The parent program identifier.
+        schema:
+          type: string
+    get:
+      summary: Get all reviews for a program
+      description: Nested endpoint helper retrieving reviews matching programId query filter directly.
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Program reviews list returned.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Review'
+    post:
+      summary: Create a program review nested
+      description: Nested review creation automatically deriving `program` parameter from URL path.
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - review
+                - rating
+              properties:
+                review:
+                  type: string
+                  example: Truly outstanding workouts.
+                rating:
+                  type: number
+                  minimum: 1
+                  maximum: 5
+                  example: 4.5
+      responses:
+        '201':
+          description: Nested review created successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Review'
+
+  /api/v1/reviews/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Review ID key.
+        schema:
+          type: string
+    get:
+      summary: Get review detail
+      description: Gets a specific review document.
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Review fetched.
+        '404':
+          description: Review not found.
+
+    patch:
+      summary: Update review content
+      description: Modifies review contents. Restricted to the authoring user.
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                review:
+                  type: string
+                  example: Slightly edited feedback.
+                rating:
+                  type: number
+                  minimum: 1
+                  maximum: 5
+                  example: 4
+      responses:
+        '200':
+          description: Review updated successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Review'
+        '403':
+          description: Forbidden (Not review author).
+        '404':
+          description: Review not found.
+
+    delete:
+      summary: Delete review
+      description: Permanently deletes review document. Restricted to review author or admin.
+      tags:
+        - Reviews
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '204':
+          description: Review deleted successfully.
+        '403':
+          description: Forbidden.
+        '404':
+          description: Review not found.
+
+  # ==========================================
+  # BOOKINGS
+  # ==========================================
+  /api/v1/bookings/checkout-session/{programId}:
+    get:
+      summary: Get Stripe Checkout Session
+      description: Generates a Stripe Checkout Session to pay for the selected program.
+      tags:
+        - Bookings
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      parameters:
+        - name: programId
+          in: path
+          required: true
+          description: ID of program to purchase.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session created successfully. Returns stripe session details.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  session:
+                    type: object
+                    description: Raw Stripe Checkout Session payload object.
+        '401':
+          description: Unauthorized.
+        '404':
+          description: Program not found.
+
+  /api/v1/bookings:
+    get:
+      summary: Get all bookings (Admin only)
+      description: Admin-level lookup to fetch list of bookings.
+      tags:
+        - Administrative Bookings
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Bookings fetched.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  results:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Booking'
+        '403':
+          description: Forbidden.
+
+    post:
+      summary: Manually create a booking (Admin only)
+      description: Directly registers a booking document in database.
+      tags:
+        - Administrative Bookings
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - program
+                - user
+                - price
+              properties:
+                program:
+                  type: string
+                  description: Program reference ID
+                  example: 60d21b4667d0d8992e610c85
+                user:
+                  type: string
+                  description: User reference ID
+                  example: 60d21b4667d0d8992e610c89
+                price:
+                  type: number
+                  example: 199.99
+                paid:
+                  type: boolean
+                  default: true
+      responses:
+        '201':
+          description: Booking registered successfully.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: success
+                  data:
+                    type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Booking'
+
+  /api/v1/bookings/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Booking reference key ID.
+        schema:
+          type: string
+    get:
+      summary: Get booking details (Admin only)
+      description: Retrieves booking info by ID.
+      tags:
+        - Administrative Bookings
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '200':
+          description: Booking retrieved successfully.
+    patch:
+      summary: Update booking details (Admin only)
+      description: Edits booking attributes.
+      tags:
+        - Administrative Bookings
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                price:
+                  type: number
+                paid:
+                  type: boolean
+      responses:
+        '200':
+          description: Booking updated successfully.
+    delete:
+      summary: Delete booking permanently (Admin only)
+      description: Removes booking registration.
+      tags:
+        - Administrative Bookings
+      security:
+        - BearerAuth: []
+        - CookieAuth: []
+      responses:
+        '204':
+          description: Booking deleted.
+
+# ==========================================
+# COMPONENTS & SCHEMAS
+# ==========================================
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Provide JWT authorization token. Format is 'Bearer <token>'.
+    CookieAuth:
+      type: apiKey
+      in: cookie
+      name: jwt
+      description: Cookies-based session tokens under 'jwt'.
+
+  schemas:
+    AuthResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          example: success
+        token:
+          type: string
+          description: Issued JSON Web Token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+        data:
+          type: object
+          properties:
+            user:
+              $ref: '#/components/schemas/User'
+
+    User:
+      type: object
+      required:
+        - id
+        - name
+        - email
+      properties:
+        id:
+          type: string
+          example: 60d21b4667d0d8992e610c89
+        name:
+          type: string
+          example: Jane Doe
+        email:
+          type: string
+          format: email
+          example: jane.doe@example.com
+        role:
+          type: string
+          enum: [user, trainer, admin]
+          default: user
+          example: user
+        photo:
+          type: string
+          example: https://res.cloudinary.com/.../image.jpg
+        description:
+          type: string
+          description: Trainer bio description (filled by admin)
+          example: Expert strength coach with 10 years of personal training experience.
+        specialization:
+          type: string
+          enum: [strength, weight-loss, cardio, flexibility, athletic, rehabilitation]
+          example: strength
+        experience:
+          type: integer
+          description: Years of experience (filled by admin)
+          example: 8
+        active:
+          type: boolean
+          default: true
+          example: true
+
+    Program:
+      type: object
+      required:
+        - id
+        - name
+        - duration
+        - sessionsPerWeek
+        - maxGroupSize
+        - difficulty
+        - category
+        - price
+        - summary
+        - imageCover
+      properties:
+        id:
+          type: string
+          example: 60d21b4667d0d8992e610c85
+        name:
+          type: string
+          example: Muscle Building Phase 1
+        slug:
+          type: string
+          example: muscle-building-phase-1
+        duration:
+          type: integer
+          description: Duration in weeks
+          example: 6
+        durationMonths:
+          type: number
+          description: Computed duration in months (weeks / 4)
+          example: 1.5
+        sessionsPerWeek:
+          type: integer
+          example: 3
+        maxGroupSize:
+          type: integer
+          example: 15
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+          example: intermediate
+        category:
+          type: string
+          enum: [weight-loss, strength, cardio, flexibility, athletic, rehabilitation]
+          example: strength
+        format:
+          type: string
+          enum: [in-person, online, hybrid]
+          example: in-person
+        equipment:
+          type: string
+          enum: [none, minimal, full-gym]
+          example: full-gym
+        price:
+          type: number
+          example: 120.0
+        priceDiscount:
+          type: number
+          example: 99.0
+        ratingsAverage:
+          type: number
+          example: 4.8
+        ratingsQuantity:
+          type: number
+          example: 12
+        summary:
+          type: string
+          example: Introduction to hypertrophy training metrics.
+        description:
+          type: string
+          example: Complete structural gym training description.
+        imageCover:
+          type: string
+          example: https://res.cloudinary.com/.../cover.jpg
+        images:
+          type: array
+          items:
+            type: string
+          example: ["https://res.cloudinary.com/.../1.jpg", "https://res.cloudinary.com/.../2.jpg"]
+        startDates:
+          type: array
+          items:
+            type: string
+            format: date-time
+          example: ["2026-07-01T00:00:00.000Z"]
+        trainers:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+
+    Review:
+      type: object
+      required:
+        - id
+        - review
+        - rating
+        - program
+        - user
+      properties:
+        id:
+          type: string
+          example: 60d21b4667d0d8992e610c92
+        review:
+          type: string
+          example: Superb fitness instructions! Highly recommended.
+        rating:
+          type: number
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-06-21T18:41:14.000Z
+        program:
+          type: string
+          description: Program reference ID
+          example: 60d21b4667d0d8992e610c85
+        user:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 60d21b4667d0d8992e610c89
+            name:
+              type: string
+              example: Jane Doe
+            photo:
+              type: string
+              example: https://res.cloudinary.com/.../avatar.jpg
+
+    Booking:
+      type: object
+      required:
+        - id
+        - program
+        - user
+        - price
+      properties:
+        id:
+          type: string
+          example: 60d21b4667d0d8992e610da1
+        program:
+          type: object
+          properties:
+            id:
+              type: string
+              example: 60d21b4667d0d8992e610c85
+            name:
+              type: string
+              example: Muscle Building Phase 1
+            duration:
+              type: integer
+              example: 6
+            category:
+              type: string
+              example: strength
+        user:
+          $ref: '#/components/schemas/User'
+        price:
+          type: number
+          example: 120.0
+        paid:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+          example: 2026-06-21T18:41:14.000Z
