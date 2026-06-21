@@ -39,9 +39,6 @@ exports.getCheckoutSession = catchAsync(async (req, res, next) => {
           product_data: {
             name: `${program.name} Program`,
             description: program.summary,
-            images: [
-              `${req.protocol}://${req.get('host')}/img/programs/${program.imageCover}`,
-            ],
           },
         },
         quantity: 1,
