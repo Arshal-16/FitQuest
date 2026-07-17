@@ -79,3 +79,18 @@ process.on('unhandledRejection', (err) => {
     process.exit(1);
   });
 });
+
+// ==============================
+// SIGTERM HANDLER
+// ==============================
+// Handles platform shutdown signals, such as deploy restarts or container stops.
+// SIGTERM already tells the Node.js process to terminate, so we only close the
+// server gracefully here instead of calling process.exit() inside server.close().
+
+process.on('SIGTERM', () => {
+  console.log('SIGTERM RECEIVED. Shutting down gracefully');
+
+  server.close(() => {
+    console.log('Process terminated!');
+  });
+});
